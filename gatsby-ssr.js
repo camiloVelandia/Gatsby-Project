@@ -1,7 +1,38 @@
-/**
- * Implement Gatsby's SSR (Server Side Rendering) APIs in this file.
- *
- * See: https://www.gatsbyjs.org/docs/ssr-apis/
- */
+const path = require("path")
 
-// You can delete this file if you're not using it
+exports.createPages = async ({ graphl, actions }) => {
+  const { createPage } = actions
+  const productTemplate = path.resolve(`src/templates/Product.js`)
+  const result = await graphql(`
+    query GET_SKUS {
+      allStripeSku {
+        edges {
+          node {
+            id
+            price
+            product {
+              name
+              metadata {
+                description
+                img
+                wear
+              }
+            }
+          }
+        }
+      }
+    }
+  `)
+
+  if (result.errors) {
+    throw result.errors
+  }
+
+  result.data.allStripeSku.edges.forEach(node => {
+    createPage({
+      path: `${node.id}`,
+      component: productTemplate,
+      context: node,
+    })
+  })
+}
